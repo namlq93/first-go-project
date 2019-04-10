@@ -1,7 +1,6 @@
 package main
 import(
 	"io"
-	"os"
 	"fmt"
 	"net/http"
 	"encoding/json"
@@ -9,6 +8,7 @@ import(
 	"strconv"
 	"log"
 	"github.com/skip2/go-qrcode"
+	"bytes"
 )
 type User struct {
 	Username string
@@ -48,10 +48,13 @@ func qr_code(w http.ResponseWriter, r *http.Request){
 			CreatedAt: createAt,
 		} 	
 		userJson, err := json.Marshal(user)
-		err = qrcode.WriteFile(string(userJson), qrcode.Medium, 256, r.FormValue("Id")+createAt.String()+".png")
-	    img, err := os.Open(userName+"-"+r.FormValue("Id")+".png")
-	    w.Header().Set("Content-Type", "image/jpeg")
-	    io.Copy(w, img)
+	   	var png []byte
+  		png, err = qrcode.Encode(string(userJson), qrcode.Medium, 256)
+  		if err != nil{
+			fmt.Println("Something wrong")
+		}
+		w.Header().Set("Content-Type", "image/jpeg")
+	  	io.Copy(w, bytes.NewReader(png))
 	}
 }
 func post(w http.ResponseWriter, r *http.Request){
